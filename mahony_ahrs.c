@@ -8,13 +8,14 @@
 // Date			Author			Notes
 // 29/09/2011	SOH Madgwick    Initial release
 // 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
+// 08/23/2020	Disi A	        Object-oriented fashion
 //
 //=====================================================================================================
 
 //---------------------------------------------------------------------------------------------------
 // Header files
 
-#include "MahonyAHRS.h"
+#include "mahony_ahrs.h"
 #include <math.h>
 
 
