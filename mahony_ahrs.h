@@ -42,6 +42,7 @@ typedef struct {
 #define TWO_KI (2.0f * 0f)     // 2 * integral gain (Ki)
 
 MahonyAHRS* create_mahony_ahrs();
+MahonyAHRS* free_mahony_ahrs();
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations
