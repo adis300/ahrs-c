@@ -39,7 +39,7 @@ typedef struct {
 // Variable declaration
 #define MA_SAMPLE_RATE 512.0
 #define TWO_KP (2.0f * 0.5f)   // 2 * proportional gain (Kp)
-#define TWO_KI (2.0f * 0f)     // 2 * integral gain (Ki)
+#define TWO_KI (2.0f * 0.0f)     // 2 * integral gain (Ki)
 
 MahonyAHRS* create_mahony_ahrs();
 MahonyAHRS* free_mahony_ahrs();

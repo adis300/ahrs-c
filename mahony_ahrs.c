@@ -16,6 +16,7 @@
 // Header files
 
 #include "mahony_ahrs.h"
+#include <stdlib.h>
 #include <math.h>
 
 
@@ -24,14 +25,14 @@
 MahonyAHRS* create_mahony_ahrs(){
 	MahonyAHRS* workspace = (MahonyAHRS *) malloc(sizeof(MahonyAHRS));
 	// quaternion of sensor frame relative to auxiliary frame
-	workspace->q0 = 1f;
-	workspace->q1 = 0f;
-	workspace->q2 = 0f;
-	workspace->q3 = 0f;
+	workspace->q0 = 1.0f;
+	workspace->q1 = 0.0f;
+	workspace->q2 = 0.0f;
+	workspace->q3 = 0.0f;
 	// integral error terms scaled by Ki
-	workspace->integralFBx = 0f
-	workspace->integralFBy = 0f
-	workspace->integralFBz = 0f
+	workspace->integralFBx = 0.0f;
+	workspace->integralFBy = 0.0f;
+	workspace->integralFBz = 0.0f;
 }
 
 MahonyAHRS* free_mahony_ahrs(MahonyAHRS* workspace){
@@ -137,7 +138,7 @@ void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz,
 void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 {
 	float recipNorm;
-	float workspace->q0workspace->q0, workspace->q0workspace->q1, workspace->q0workspace->q2, workspace->q0workspace->q3, workspace->q1workspace->q1, workspace->q1workspace->q2, workspace->q1workspace->q3, workspace->q2workspace->q2, workspace->q2workspace->q3, workspace->q3workspace->q3;
+	float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
 	float hx, hy, bx, bz;
 	float halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
 	float halfex, halfey, halfez;
@@ -146,7 +147,7 @@ void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, flo
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
 	if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f))
 	{
-		mahony_ahrs_update_imu(gx, gy, gz, ax, ay, az);
+		mahony_ahrs_update_imu(workspace, gx, gy, gz, ax, ay, az);
 		return;
 	}
 
@@ -167,30 +168,30 @@ void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, flo
 		mz *= recipNorm;
 
 		// Auxiliary variables to avoid repeated arithmetic
-		workspace->q0workspace->q0 = workspace->q0 * workspace->q0;
-		workspace->q0workspace->q1 = workspace->q0 * workspace->q1;
-		workspace->q0workspace->q2 = workspace->q0 * workspace->q2;
-		workspace->q0workspace->q3 = workspace->q0 * workspace->q3;
-		workspace->q1workspace->q1 = workspace->q1 * workspace->q1;
-		workspace->q1workspace->q2 = workspace->q1 * workspace->q2;
-		workspace->q1workspace->q3 = workspace->q1 * workspace->q3;
-		workspace->q2workspace->q2 = workspace->q2 * workspace->q2;
-		workspace->q2workspace->q3 = workspace->q2 * workspace->q3;
-		workspace->q3workspace->q3 = workspace->q3 * workspace->q3;
+		q0q0 = workspace->q0 * workspace->q0;
+		q0q1 = workspace->q0 * workspace->q1;
+		q0q2 = workspace->q0 * workspace->q2;
+		q0q3 = workspace->q0 * workspace->q3;
+		q1q1 = workspace->q1 * workspace->q1;
+		q1q2 = workspace->q1 * workspace->q2;
+		q1q3 = workspace->q1 * workspace->q3;
+		q2q2 = workspace->q2 * workspace->q2;
+		q2q3 = workspace->q2 * workspace->q3;
+		q3q3 = workspace->q3 * workspace->q3;
 
 		// Reference direction of Earth's magnetic field
-		hx = 2.0f * (mx * (0.5f - workspace->q2workspace->q2 - workspace->q3workspace->q3) + my * (workspace->q1workspace->q2 - workspace->q0workspace->q3) + mz * (workspace->q1workspace->q3 + workspace->q0workspace->q2));
-		hy = 2.0f * (mx * (workspace->q1workspace->q2 + workspace->q0workspace->q3) + my * (0.5f - workspace->q1workspace->q1 - workspace->q3workspace->q3) + mz * (workspace->q2workspace->q3 - workspace->q0workspace->q1));
+		hx = 2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
+		hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
 		bx = sqrt(hx * hx + hy * hy);
-		bz = 2.0f * (mx * (workspace->q1workspace->q3 - workspace->q0workspace->q2) + my * (workspace->q2workspace->q3 + workspace->q0workspace->q1) + mz * (0.5f - workspace->q1workspace->q1 - workspace->q2workspace->q2));
-
+		bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+		
 		// Estimated direction of gravity and magnetic field
-		halfvx = workspace->q1workspace->q3 - workspace->q0workspace->q2;
-		halfvy = workspace->q0workspace->q1 + workspace->q2workspace->q3;
-		halfvz = workspace->q0workspace->q0 - 0.5f + workspace->q3workspace->q3;
-		halfwx = bx * (0.5f - workspace->q2workspace->q2 - workspace->q3workspace->q3) + bz * (workspace->q1workspace->q3 - workspace->q0workspace->q2);
-		halfwy = bx * (workspace->q1workspace->q2 - workspace->q0workspace->q3) + bz * (workspace->q0workspace->q1 + workspace->q2workspace->q3);
-		halfwz = bx * (workspace->q0workspace->q2 + workspace->q1workspace->q3) + bz * (0.5f - workspace->q1workspace->q1 - workspace->q2workspace->q2);
+		halfvx = q1q3 - q0q2;
+		halfvy = q0q1 + q2q3;
+		halfvz = q0q0 - 0.5f + q3q3;
+		halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+		halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+		halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);
 
 		// Error is sum of cross product between estimated direction and measured direction of field vectors
 		halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy);
