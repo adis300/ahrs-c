@@ -33,9 +33,10 @@ MahonyAHRS* create_mahony_ahrs(){
 	workspace->integralFBx = 0.0f;
 	workspace->integralFBy = 0.0f;
 	workspace->integralFBz = 0.0f;
+	return workspace;
 }
 
-MahonyAHRS* free_mahony_ahrs(MahonyAHRS* workspace){
+void free_mahony_ahrs(MahonyAHRS* workspace){
 	free(workspace);
 }
 //---------------------------------------------------------------------------------------------------

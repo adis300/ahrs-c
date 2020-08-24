@@ -31,6 +31,8 @@ typedef struct {
     MA_PRECISION integralFBx;
     MA_PRECISION integralFBy;
     MA_PRECISION integralFBz;
+    
+    // Result variables
     MA_PRECISION yaw;
     MA_PRECISION pitch;
     MA_PRECISION roll;
@@ -42,7 +44,7 @@ typedef struct {
 #define TWO_KI (2.0f * 0.0f)     // 2 * integral gain (Ki)
 
 MahonyAHRS* create_mahony_ahrs();
-MahonyAHRS* free_mahony_ahrs();
+void free_mahony_ahrs(MahonyAHRS* workspace);
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations
