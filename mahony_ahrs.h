@@ -9,6 +9,7 @@
 // 29/09/2011	SOH Madgwick    Initial release
 // 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
 // 08/23/2020	Disi A	        Object-oriented fashion
+// 08/31/2020	Disi A	        Variable sample frequence implementation
 //
 //=====================================================================================================
 #ifndef mahony_ahrs_h
@@ -23,6 +24,7 @@
 #endif
 
 typedef struct {
+    MA_PRECISION sample_rate;
     MA_PRECISION q0;
     MA_PRECISION q1;
     MA_PRECISION q2;
@@ -39,18 +41,18 @@ typedef struct {
 } MahonyAHRS;
 //----------------------------------------------------------------------------------------------------
 // Variable declaration
-#define MA_SAMPLE_RATE 512.0
-#define TWO_KP (2.0f * 0.5f)   // 2 * proportional gain (Kp)
-#define TWO_KI (2.0f * 0.0f)     // 2 * integral gain (Ki)
+#define TWO_KP = (2.0f * 0.5f)   // 2 * proportional gain (Kp)
+#define TWO_KI = (2.0f * 0.0f)     // 2 * integral gain (Ki)
 
 MahonyAHRS* create_mahony_ahrs();
 void free_mahony_ahrs(MahonyAHRS* workspace);
 
 //---------------------------------------------------------------------------------------------------
 // Function declarations
+void mahony_ahrs_update_sample_rate(MahonyAHRS* workspace, MA_PRECISION sample_rate);
 
-void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz, float ax, float ay, float az);
+void mahony_ahrs_update_imu(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION gy, MA_PRECISION gz, MA_PRECISION ax, MA_PRECISION ay, MA_PRECISION az);
 
-void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+void mahony_ahrs_update(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION gy, MA_PRECISION gz, MA_PRECISION ax, MA_PRECISION ay, MA_PRECISION az, MA_PRECISION mx, MA_PRECISION my, MA_PRECISION mz);
 
 #endif /* mahony_ahrs_h */

@@ -9,6 +9,7 @@
 // 29/09/2011	SOH Madgwick    Initial release
 // 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
 // 08/23/2020	Disi A	        Object-oriented fashion
+// 08/31/2020	Disi A	        Variable sample frequence implementation
 //
 //=====================================================================================================
 
@@ -20,10 +21,22 @@
 #include <math.h>
 
 
+#if MA_DOUBLE_PRECISION
+#define ATAN2 atan2
+#define ASIN asin
+#define MAGIC_R 0x5fe6eb50c7b537a9
+#else
+#define ATAN2 atan2f
+#define ASIN asinf
+#define MAGIC_R 0x5f3759df
+#endif
+
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
-MahonyAHRS* create_mahony_ahrs(){
+MahonyAHRS* create_mahony_ahrs(MA_PRECISION sample_rate){
+	if(sample_rate <= 0) return NULL;
 	MahonyAHRS* workspace = (MahonyAHRS *) malloc(sizeof(MahonyAHRS));
+	workspace->sample_rate = sample_rate;
 	// quaternion of sensor frame relative to auxiliary frame
 	workspace->q0 = 1.0f;
 	workspace->q1 = 0.0f;
@@ -36,6 +49,21 @@ MahonyAHRS* create_mahony_ahrs(){
 	return workspace;
 }
 
+void mahony_ahrs_update_sample_rate(MahonyAHRS* workspace, MA_PRECISION sample_rate) {
+	if(workspace == NULL) return;
+	if(sample_rate <= 0) return;
+	if(sample_rate != workspace -> sample_rate) {// Reset the parameters when sample rates are different;
+		workspace->sample_rate = sample_rate;
+		workspace->q0 = 1.0f;
+		workspace->q1 = 0.0f;
+		workspace->q2 = 0.0f;
+		workspace->q3 = 0.0f;
+		workspace->integralFBx = 0.0f;
+		workspace->integralFBy = 0.0f;
+		workspace->integralFBz = 0.0f;
+	}
+}
+
 void free_mahony_ahrs(MahonyAHRS* workspace){
 	free(workspace);
 }
@@ -44,13 +72,13 @@ void free_mahony_ahrs(MahonyAHRS* workspace){
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 
-float inv_sqrt(float x)
+MA_PRECISION inv_sqrt(MA_PRECISION x)
 {
-	float halfx = 0.5f * x;
-	float y = x;
+	MA_PRECISION halfx = 0.5f * x;
+	MA_PRECISION y = x;
 	long i = *(long *)&y;
-	i = 0x5f3759df - (i >> 1);
-	y = *(float *)&i;
+	i = MAGIC_R - (i >> 1);
+	y = *(MA_PRECISION *)&i;
 	y = y * (1.5f - (halfx * y * y));
 	return y;
 }
@@ -61,13 +89,13 @@ float inv_sqrt(float x)
 //---------------------------------------------------------------------------------------------------
 // IMU algorithm update
 
-void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz, float ax, float ay, float az)
+void mahony_ahrs_update_imu(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION gy, MA_PRECISION gz, MA_PRECISION ax, MA_PRECISION ay, MA_PRECISION az)
 {
 	// temp vars
-	float recipNorm;
-	float halfvx, halfvy, halfvz;
-	float halfex, halfey, halfez;
-	float qa, qb, qc;
+	MA_PRECISION recipNorm;
+	MA_PRECISION halfvx, halfvy, halfvz;
+	MA_PRECISION halfex, halfey, halfez;
+	MA_PRECISION qa, qb, qc;
 
 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
 	if (!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
@@ -92,9 +120,9 @@ void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz,
 		// Compute and apply integral feedback if enabled
 		if (TWO_KI > 0.0f)
 		{
-			workspace->integralFBx += TWO_KI * halfex * (1.0f / MA_SAMPLE_RATE); // integral error scaled by Ki
-			workspace->integralFBy += TWO_KI * halfey * (1.0f / MA_SAMPLE_RATE);
-			workspace->integralFBz += TWO_KI * halfez * (1.0f / MA_SAMPLE_RATE);
+			workspace->integralFBx += TWO_KI * halfex * (1.0f / workspace->sample_rate); // integral error scaled by Ki
+			workspace->integralFBy += TWO_KI * halfey * (1.0f / workspace->sample_rate);
+			workspace->integralFBz += TWO_KI * halfez * (1.0f / workspace->sample_rate);
 			gx += workspace->integralFBx; // apply integral feedback
 			gy += workspace->integralFBy;
 			gz += workspace->integralFBz;
@@ -111,9 +139,9 @@ void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz,
 	}
 
 	// Integrate rate of change of quaternion
-	gx *= (0.5f / MA_SAMPLE_RATE); // pre-multiply common factors
-	gy *= (0.5f / MA_SAMPLE_RATE);
-	gz *= (0.5f / MA_SAMPLE_RATE);
+	gx *= (0.5f / workspace->sample_rate); // pre-multiply common factors
+	gy *= (0.5f / workspace->sample_rate);
+	gz *= (0.5f / workspace->sample_rate);
 	qa = workspace->q0;
 	qb = workspace->q1;
 	qc = workspace->q2;
@@ -136,14 +164,14 @@ void mahony_ahrs_update_imu(MahonyAHRS* workspace, float gx, float gy, float gz,
 
 //---------------------------------------------------------------------------------------------------
 // AHRS algorithm update
-void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+void mahony_ahrs_update(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION gy, MA_PRECISION gz, MA_PRECISION ax, MA_PRECISION ay, MA_PRECISION az, MA_PRECISION mx, MA_PRECISION my, MA_PRECISION mz)
 {
-	float recipNorm;
-	float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
-	float hx, hy, bx, bz;
-	float halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
-	float halfex, halfey, halfez;
-	float qa, qb, qc;
+	MA_PRECISION recipNorm;
+	MA_PRECISION q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
+	MA_PRECISION hx, hy, bx, bz;
+	MA_PRECISION halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
+	MA_PRECISION halfex, halfey, halfez;
+	MA_PRECISION qa, qb, qc;
 
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
 	if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f))
@@ -202,9 +230,9 @@ void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, flo
 		// Compute and apply integral feedback if enabled
 		if (TWO_KI > 0.0f)
 		{
-			workspace->integralFBx += TWO_KI * halfex * (1.0f / MA_SAMPLE_RATE); // integral error scaled by Ki
-			workspace->integralFBy += TWO_KI * halfey * (1.0f / MA_SAMPLE_RATE);
-			workspace->integralFBz += TWO_KI * halfez * (1.0f / MA_SAMPLE_RATE);
+			workspace->integralFBx += TWO_KI * halfex * (1.0f / workspace->sample_rate); // integral error scaled by Ki
+			workspace->integralFBy += TWO_KI * halfey * (1.0f / workspace->sample_rate);
+			workspace->integralFBz += TWO_KI * halfez * (1.0f / workspace->sample_rate);
 			gx += workspace->integralFBx; // apply integral feedback
 			gy += workspace->integralFBy;
 			gz += workspace->integralFBz;
@@ -221,9 +249,9 @@ void mahony_ahrs_update(MahonyAHRS* workspace, float gx, float gy, float gz, flo
 	}
 
 	// Integrate rate of change of quaternion
-	gx *= (0.5f / MA_SAMPLE_RATE); // pre-multiply common factors
-	gy *= (0.5f / MA_SAMPLE_RATE);
-	gz *= (0.5f / MA_SAMPLE_RATE);
+	gx *= (0.5f / workspace->sample_rate); // pre-multiply common factors
+	gy *= (0.5f / workspace->sample_rate);
+	gz *= (0.5f / workspace->sample_rate);
 	qa = workspace->q0;
 	qb = workspace->q1;
 	qc = workspace->q2;
