@@ -46,30 +46,6 @@ void madgwick_ahrs_update_sample_rate(MadgwickAHRS* workspace, MA_PRECISION samp
 void free_madgwick_ahrs(MadgwickAHRS* workspace){
 	free(workspace);
 }
-//---------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------
-// Fast inverse square-root
-// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-
-MA_PRECISION inv_sqrt(MA_PRECISION x)
-{
-	MA_PRECISION halfx = 0.5f * x;
-	MA_PRECISION y = x;
-	long i = *(long *)&y;
-	i = MAGIC_R - (i >> 1);
-	y = *(MA_PRECISION *)&i;
-	y = y * (1.5f - (halfx * y * y));
-	return y;
-}
-
-void compute_euler_angle(MadgwickAHRS* workspace){
-	//*yaw = atan2f((2*q.q2*q.q3 - 2*q.q1*q.q4), (2*q.q1*q.q1 + 2*q.q2*q.q2 -1));  // equation (7)
-    //*pitch = -asinf(2*q.q2*q.q4 + 2*q.q1*q.q3);                                  // equatino (8)
-    //*roll  = atan2f((2*q.q3*q.q4 - 2*q.q1*q.q2), (2*q.q1*q.q1 + 2*q.q4*q.q4 -1));
-	workspace->yaw = atan2(2 * workspace->q1 * workspace->q2 + 2 * workspace->q0 * workspace->q3, -2 * workspace->q2 * workspace->q2 - 2 * workspace->q3 * workspace->q3 + 1) * 57.3;	// yaw
-	workspace->pitch = asin(-2 * workspace->q1 * workspace->q3 + 2 * workspace->q0 * workspace->q2) * 57.3;								// pitch
-	workspace->roll = atan2(2 * workspace->q2 * workspace->q3 + 2 * workspace->q0 * workspace->q1, -2 * workspace->q1 * workspace->q1 - 2 * workspace->q2 * workspace->q2 + 1) * 57.3; // roll
-}
 
 //====================================================================================================
 // Functions
@@ -248,6 +224,6 @@ void madgwick_ahrs_update(MadgwickAHRS* workspace, MA_PRECISION gx, MA_PRECISION
 	workspace->q2 *= recipNorm;
 	workspace->q3 *= recipNorm;
 
-	compute_euler_angle(workspace);
+	COMPUTE_EULER_ANGLE(workspace);
 }
 

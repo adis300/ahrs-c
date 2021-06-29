@@ -56,21 +56,6 @@ void mahony_ahrs_update_sample_rate(MahonyAHRS* workspace, MA_PRECISION sample_r
 void free_mahony_ahrs(MahonyAHRS* workspace){
 	free(workspace);
 }
-//---------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------
-// Fast inverse square-root
-// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-
-MA_PRECISION inv_sqrt(MA_PRECISION x)
-{
-	MA_PRECISION halfx = 0.5f * x;
-	MA_PRECISION y = x;
-	long i = *(long *)&y;
-	i = MAGIC_R - (i >> 1);
-	y = *(MA_PRECISION *)&i;
-	y = y * (1.5f - (halfx * y * y));
-	return y;
-}
 
 //====================================================================================================
 // Functions
@@ -144,7 +129,7 @@ void mahony_ahrs_update_imu(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION
 	workspace->q1 *= recipNorm;
 	workspace->q2 *= recipNorm;
 	workspace->q3 *= recipNorm;
-	compute_euler_angle(workspace);
+	COMPUTE_EULER_ANGLE(workspace);
 }
 
 //---------------------------------------------------------------------------------------------------

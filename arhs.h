@@ -30,7 +30,18 @@
 	if(sinp > M_PI/2) WS->pitch = 180/2;\
 	else if(sinp < -M_PI/2) WS->pitch = -180/2;\
 	else WS->pitch = ASIN(sinp) * 180/M_PI;\
-	WS->roll = ATAN2(2 * WS->q0 * WS->q1 + 2 * WS->q2 * WS->q3, 1 -2 * WS->q1 * WS->q1 - 2 * WS->q2 * WS->q2)
+	WS->roll = ATAN2(2 * WS->q0 * WS->q1 + 2 * WS->q2 * WS->q3, 1 -2 * WS->q1 * WS->q1 - 2 * WS->q2 * WS->q2)*180/M_PI
 
+
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+MA_PRECISION inv_sqrt(MA_PRECISION x){
+	MA_PRECISION halfx = 0.5f * x;
+	MA_PRECISION y = x;
+	long i = *(long *)&y;
+	i = MAGIC_R - (i >> 1);
+	y = *(MA_PRECISION *)&i;
+	y = y * (1.5f - (halfx * y * y));
+	return y;
+}
 
 #endif
