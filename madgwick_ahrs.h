@@ -15,13 +15,7 @@
 #ifndef __MADGWICK_AHRS_H__
 #define __MADGWICK_AHRS_H__
 
-#define MA_DOUBLE_PRECISION 0
-
-#if MA_DOUBLE_PRECISION
-#define MA_PRECISION double
-#else
-#define MA_PRECISION float
-#endif
+#include "arhs.h"
 
 typedef struct {
     MA_PRECISION sample_rate;

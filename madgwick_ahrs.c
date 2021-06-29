@@ -17,19 +17,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
-#if MA_DOUBLE_PRECISION
-#define ATAN2 atan2
-#define ASIN asin
-#define SQRT sqrt
-#define MAGIC_R 0x5fe6eb50c7b537a9
-#else
-#define ATAN2 atan2f
-#define ASIN asinf
-#define SQRT sqrtf
-#define MAGIC_R 0x5f3759df
-#endif
-
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
 MadgwickAHRS* create_madgwick_ahrs(MA_PRECISION sample_rate){
@@ -158,7 +145,8 @@ void madgwick_ahrs_update_imu(MadgwickAHRS* workspace, MA_PRECISION gx, MA_PRECI
 	workspace->q1 *= recipNorm;
 	workspace->q2 *= recipNorm;
 	workspace->q3 *= recipNorm;
-	compute_euler_angle(workspace);
+
+	COMPUTE_EULER_ANGLE(workspace);
 }
 
 //---------------------------------------------------------------------------------------------------

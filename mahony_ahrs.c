@@ -20,17 +20,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
-#if MA_DOUBLE_PRECISION
-#define ATAN2 atan2
-#define ASIN asin
-#define MAGIC_R 0x5fe6eb50c7b537a9
-#else
-#define ATAN2 atan2f
-#define ASIN asinf
-#define MAGIC_R 0x5f3759df
-#endif
-
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
 MahonyAHRS* create_mahony_ahrs(MA_PRECISION sample_rate){
@@ -81,15 +70,6 @@ MA_PRECISION inv_sqrt(MA_PRECISION x)
 	y = *(MA_PRECISION *)&i;
 	y = y * (1.5f - (halfx * y * y));
 	return y;
-}
-
-void compute_euler_angle(MahonyAHRS* workspace){
-	//*yaw = atan2f((2*q.q2*q.q3 - 2*q.q1*q.q4), (2*q.q1*q.q1 + 2*q.q2*q.q2 -1));  // equation (7)
-    //*pitch = -asinf(2*q.q2*q.q4 + 2*q.q1*q.q3);                                  // equatino (8)
-    //*roll  = atan2f((2*q.q3*q.q4 - 2*q.q1*q.q2), (2*q.q1*q.q1 + 2*q.q4*q.q4 -1));
-	workspace->yaw = atan2(2 * workspace->q1 * workspace->q2 + 2 * workspace->q0 * workspace->q3, -2 * workspace->q2 * workspace->q2 - 2 * workspace->q3 * workspace->q3 + 1) * 57.3;	// yaw
-	workspace->pitch = asin(-2 * workspace->q1 * workspace->q3 + 2 * workspace->q0 * workspace->q2) * 57.3;								// pitch
-	workspace->roll = atan2(2 * workspace->q2 * workspace->q3 + 2 * workspace->q0 * workspace->q1, -2 * workspace->q1 * workspace->q1 - 2 * workspace->q2 * workspace->q2 + 1) * 57.3; // roll
 }
 
 //====================================================================================================
@@ -272,6 +252,6 @@ void mahony_ahrs_update(MahonyAHRS* workspace, MA_PRECISION gx, MA_PRECISION gy,
 	workspace->q2 *= recipNorm;
 	workspace->q3 *= recipNorm;
 	
-	compute_euler_angle(workspace);
+	COMPUTE_EULER_ANGLE(workspace);
 }
 
