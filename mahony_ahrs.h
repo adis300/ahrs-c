@@ -35,8 +35,9 @@ typedef struct {
 } MahonyAHRS;
 //----------------------------------------------------------------------------------------------------
 // Variable declaration
-#define TWO_KP (2.0f * 0.5f)   // 2 * proportional gain (Kp)
-#define TWO_KI (2.0f * 0.0f)     // 2 * integral gain (Ki)
+// https://ahrs.readthedocs.io/en/latest/filters/mahony.html
+#define TWO_KP (2.0f * 1.0f)   // 2 * proportional gain (Kp), original 2 * 0.5
+#define TWO_KI (2.0f * 0.3f)     // 2 * integral gain (Ki)
 
 MahonyAHRS* create_mahony_ahrs(MA_PRECISION sample_rate);
 void free_mahony_ahrs(MahonyAHRS* workspace);
