@@ -150,7 +150,6 @@ void madgwick_ahrs_update(MadgwickAHRS* workspace, MA_PRECISION gx, MA_PRECISION
 
 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
 	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
-	{
 		// Normalise accelerometer measurement
 		recipNorm = inv_sqrt(ax * ax + ay * ay + az * az);
 		ax *= recipNorm;

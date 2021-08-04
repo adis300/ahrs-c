@@ -31,7 +31,7 @@ typedef struct {
 } MadgwickAHRS;
 //----------------------------------------------------------------------------------------------------
 // Variable declaration
-#define BETA 0.1f   // 2 * proportional gain
+#define BETA 0.033f   // 2 * proportional gain
 
 MadgwickAHRS* create_madgwick_ahrs(MA_PRECISION sample_rate);
 void free_madgwick_ahrs(MadgwickAHRS* workspace);
