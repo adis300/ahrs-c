@@ -27,8 +27,8 @@
 #define COMPUTE_EULER_ANGLE(WS) \
 	WS->yaw = ATAN2(2 * WS->q0 * WS->q3 + 2 * WS->q1 * WS->q2, 1 - 2 * WS->q2 * WS->q2 - 2 * WS->q3 * WS->q3); \
 	MA_PRECISION sinp = 2 * WS->q0 * WS->q2 - 2 * WS->q1 * WS->q3;\
-	if(sinp > M_PI/2) WS->pitch = M_PI/2;\
-	else if(sinp < -M_PI/2) WS->pitch = -M_PI/2;\
+	if(sinp >= 1) WS->pitch = M_PI/2;\
+	else if(sinp <= -1) WS->pitch = -M_PI/2;\
 	else WS->pitch = ASIN(sinp);\
 	WS->roll = ATAN2(2 * WS->q0 * WS->q1 + 2 * WS->q2 * WS->q3, 1 -2 * WS->q1 * WS->q1 - 2 * WS->q2 * WS->q2)
 
